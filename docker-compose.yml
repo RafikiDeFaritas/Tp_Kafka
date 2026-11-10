@@ -10,8 +10,8 @@
 
 x-spark: &spark
   image: kafka-meteo/pyspark:latest
-  build: ./docker
-  pull_policy: build
+  environment:
+    PYTHONPATH: /usr/local/spark/python:/usr/local/spark/python/lib/py4j-0.10.9.7-src.zip
   volumes:
     - ./work:/home/jovyan/work            # même chemin partout : scripts et checkpoints
 
@@ -76,8 +76,10 @@ services:
 
   spark-master:
     <<: *spark
+    build: ./docker
     container_name: spark-master
     hostname: spark-master
+    restart: always
     ports:
       - "8080:8080"
       - "7077:7077"
@@ -87,6 +89,7 @@ services:
     <<: *spark
     container_name: spark-worker
     hostname: spark-worker
+    restart: always
     depends_on:
       - spark-master
     command: ["/usr/local/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker",
@@ -96,6 +99,7 @@ services:
     <<: *spark
     container_name: pyspark_notebook
     hostname: pyspark-notebook
+    restart: always
     depends_on:
       - spark-master
       - kafka
@@ -108,6 +112,7 @@ services:
     image: apache/kafka:3.9.1
     container_name: kafka
     hostname: kafka
+    restart: always
     ports:
       - "9094:9094"
     environment:
